@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "df_carga_establecimientos",
+						"referenceName": "df_carga_vacunas_pai",
 						"type": "DataFlowReference"
 					},
 					"compute": {
