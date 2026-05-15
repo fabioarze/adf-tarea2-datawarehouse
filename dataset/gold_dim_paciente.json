@@ -1,0 +1,33 @@
+{
+	"name": "gold_dim_paciente",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "dw_pai",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "gold"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "paciente_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "genero",
+				"type": "varchar"
+			},
+			{
+				"name": "grupo_poblacional",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "gold",
+			"table": "dim_paciente"
+		}
+	}
+}

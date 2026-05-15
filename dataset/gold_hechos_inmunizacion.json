@@ -1,0 +1,67 @@
+{
+	"name": "gold_hechos_inmunizacion",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "dw_pai",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "gold"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "inmunizacion_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "fecha_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "vacuna_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ubicacion_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "paciente_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "cantidad_dosis",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "edad_dias_dato",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "descripcion_edad",
+				"type": "varchar"
+			},
+			{
+				"name": "condicion_especial",
+				"type": "varchar"
+			},
+			{
+				"name": "sitio_aplicacion",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "gold",
+			"table": "hechos_inmunizacion"
+		}
+	}
+}

@@ -1,0 +1,37 @@
+{
+	"name": "gold_dim_vacuna",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "dw_pai",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "gold"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "vacuna_key",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "nombre_vacuna",
+				"type": "varchar"
+			},
+			{
+				"name": "tipo_vacuna",
+				"type": "varchar"
+			},
+			{
+				"name": "es_dosis_unica",
+				"type": "bit"
+			}
+		],
+		"typeProperties": {
+			"schema": "gold",
+			"table": "dim_vacuna"
+		}
+	}
+}
