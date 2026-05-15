@@ -1,5 +1,5 @@
 {
-	"name": "df_bronze_catalogo_departamentos",
+	"name": "df_carga_departamentos",
 	"properties": {
 		"folder": {
 			"name": "bronze"
