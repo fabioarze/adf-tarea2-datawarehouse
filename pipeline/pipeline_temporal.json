@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "df_carga_departamentos",
+						"referenceName": "df_carga_establecimientos",
 						"type": "DataFlowReference"
 					},
 					"compute": {
