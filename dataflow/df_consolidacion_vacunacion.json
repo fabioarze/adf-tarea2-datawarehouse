@@ -29,7 +29,15 @@
 					"name": "source3"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "silver_vacunacion_consolidada",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "select1"
@@ -45,6 +53,33 @@
 				},
 				{
 					"name": "union2"
+				},
+				{
+					"name": "RegistroIdPacienteId"
+				},
+				{
+					"name": "Sexo"
+				},
+				{
+					"name": "ComIndigena"
+				},
+				{
+					"name": "AplicacionOportuna"
+				},
+				{
+					"name": "EstablecimientoId"
+				},
+				{
+					"name": "Departamento"
+				},
+				{
+					"name": "FechaVacuna"
+				},
+				{
+					"name": "Trim"
+				},
+				{
+					"name": "Fechas"
 				}
 			],
 			"scriptLines": [
@@ -211,7 +246,97 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select3",
 				"select1, select2 union(byName: true)~> union1",
-				"union1, select3 union(byName: true)~> union2"
+				"union1, select3 union(byName: true)~> union2",
+				"Trim derive(registro_id = iif(startsWith(registro_id, 'LP-'), replace(registro_id, 'LP-', 'REG-LP-'),     iif(startsWith(registro_id, 'MOVIL-'), replace(registro_id, 'MOVIL-', 'REG-RU-'),      registro_id)),",
+				"          paciente_id = iif(startsWith(paciente_id, 'MOV-'), replace(paciente_id, 'MOV-', 'PAC-RU-'),     iif(startsWith(paciente_id, 'PAC-LP-'), paciente_id,      iif(startsWith(paciente_id, 'PAC-SC-'), paciente_id,      paciente_id)))) ~> RegistroIdPacienteId",
+				"RegistroIdPacienteId derive(sexo = iif(upper(left(sexo, 1)) == 'M', 'M', 'F')) ~> Sexo",
+				"Sexo derive(comunidad_indigena = iif(in(['SÍ', 'SI', 'TRUE', '1'], upper(toString(comunidad_indigena))), true(), false())) ~> ComIndigena",
+				"ComIndigena derive(aplicacion_oportuna = iif(isNull(aplicacion_oportuna), true(), toBoolean(aplicacion_oportuna))) ~> AplicacionOportuna",
+				"AplicacionOportuna derive(establecimiento_id = iif(startsWith(establecimiento_id, 'FAC-'), replace(establecimiento_id, 'FAC-', 'EST-RU-'),     iif(startsWith(establecimiento_id, 'EST-LP-'), establecimiento_id,      iif(startsWith(establecimiento_id, 'EST-SC-'), establecimiento_id,      establecimiento_id)))) ~> EstablecimientoId",
+				"EstablecimientoId derive(departamento = initCap(     replace(         replace(lower(trim(departamento)), 'sta cruz de la sierra', 'santa cruz'),         'stacruz', 'santa cruz'     ) )) ~> Departamento",
+				"Departamento derive(fecha_vacunacion = toString(     coalesce(         toTimestamp(fecha_vacunacion, 'dd/MM/yyyy'),         toTimestamp(fecha_vacunacion, 'yyyy-MM-dd\\'T\\'HH:mm:ss')     ),      'dd/MM/yyyy' )) ~> FechaVacuna",
+				"union2 derive(registro_id = trim(registro_id),",
+				"          paciente_id = trim(paciente_id),",
+				"          ci_paciente = trim(ci_paciente),",
+				"          nombre_paciente = trim(nombre_paciente),",
+				"          apellido_paterno = trim(apellido_paterno),",
+				"          apellido_materno = trim(apellido_materno),",
+				"          sexo = trim(sexo),",
+				"          fecha_nacimiento = trim(fecha_nacimiento),",
+				"          municipio_residencia = trim(municipio_residencia),",
+				"          comunidad_indigena = trim(comunidad_indigena),",
+				"          fecha_vacunacion = trim(fecha_vacunacion),",
+				"          vacuna_id = trim(vacuna_id),",
+				"          vacuna_nombre = trim(vacuna_nombre),",
+				"          numero_dosis = trim(numero_dosis),",
+				"          establecimiento_id = trim(establecimiento_id),",
+				"          nombre_establecimiento = trim(nombre_establecimiento),",
+				"          departamento = trim(departamento),",
+				"          lote_vacuna = trim(lote_vacuna),",
+				"          temperatura_conservacion = trim(temperatura_conservacion),",
+				"          edad_dias_aplicacion = trim(edad_dias_aplicacion),",
+				"          via_administracion = trim(via_administracion),",
+				"          aplicacion_oportuna = trim(aplicacion_oportuna)) ~> Trim",
+				"FechaVacuna derive(fecha_vacunacion = toDate(\r",
+				"    coalesce(\r",
+				"        toTimestamp(fecha_vacunacion, 'dd/MM/yyyy'),\r",
+				"        toTimestamp(fecha_vacunacion, 'yyyy-MM-dd\\'T\\'HH:mm:ss')\r",
+				"    )\r",
+				"),",
+				"          fecha_nacimiento = toDate(\r",
+				"    coalesce(\r",
+				"        toTimestamp(fecha_nacimiento, 'dd/MM/yyyy'),\r",
+				"        toTimestamp(fecha_nacimiento, 'yyyy-MM-dd\\'T\\'HH:mm:ss'),\r",
+				"        toTimestamp(fecha_nacimiento, 'dd/MM/yyyy')\r",
+				"    )\r",
+				"),",
+				"          nombre_completo = trim(concat(nombre_paciente, ' ', apellido_paterno, ' ', apellido_materno))) ~> Fechas",
+				"Fechas sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          registro_id as string,",
+				"          paciente_id as string,",
+				"          ci_paciente as string,",
+				"          nombre_completo as string,",
+				"          sexo as string,",
+				"          fecha_nacimiento as date,",
+				"          fecha_vacunacion as timestamp,",
+				"          vacuna_id as string,",
+				"          establecimiento_id as string,",
+				"          numero_dosis as integer,",
+				"          lote_vacuna as string,",
+				"          temperatura_conservacion as decimal(5,2),",
+				"          edad_dias_aplicacion as integer,",
+				"          aplicacion_oportuna as boolean,",
+				"          canal_fuente as string,",
+				"          fecha_carga as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     dateFormat:'dd/MM/yyyy',",
+				"     timestampFormat:'dd/MM/yyyy',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          registro_id,",
+				"          paciente_id,",
+				"          ci_paciente,",
+				"          nombre_completo,",
+				"          sexo,",
+				"          fecha_nacimiento,",
+				"          fecha_vacunacion,",
+				"          vacuna_id,",
+				"          establecimiento_id,",
+				"          numero_dosis,",
+				"          lote_vacuna,",
+				"          temperatura_conservacion,",
+				"          edad_dias_aplicacion,",
+				"          aplicacion_oportuna",
+				"     )) ~> sink1"
 			]
 		}
 	}
