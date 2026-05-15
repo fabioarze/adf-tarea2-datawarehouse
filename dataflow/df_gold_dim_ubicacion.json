@@ -1,0 +1,61 @@
+{
+	"name": "df_gold_dim_ubicacion",
+	"properties": {
+		"folder": {
+			"name": "gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "silver_vacunacion_consolidada",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "gold_dim_ubicacion",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          municipio as string,",
+				"          establecimiento_salud as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT \\n    CASE \\n        WHEN establecimiento_id LIKE \\'%-LP-%\\' THEN \\'La Paz\\'\\n        WHEN establecimiento_id LIKE \\'%-SC-%\\' THEN \\'Santa Cruz\\'\\n        WHEN establecimiento_id LIKE \\'%-CB-%\\' THEN \\'Cochabamba\\'\\n        WHEN establecimiento_id LIKE \\'%-OR-%\\' THEN \\'Oruro\\'\\n        WHEN establecimiento_id LIKE \\'%-PT-%\\' THEN \\'Potosí\\'\\n        WHEN establecimiento_id LIKE \\'%-CH-%\\' THEN \\'Chuquisaca\\'\\n        WHEN establecimiento_id LIKE \\'%-TJ-%\\' THEN \\'Tarija\\'\\n        WHEN establecimiento_id LIKE \\'%-BE-%\\' THEN \\'Beni\\'\\n        WHEN establecimiento_id LIKE \\'%-PA-%\\' THEN \\'Pando\\'\\n        ELSE \\'Otro/Desconocido\\'\\n    END AS municipio, \\n    establecimiento_id AS establecimiento_salud\\nFROM silver.vacunacion_consolidada\\nWHERE establecimiento_id IS NOT NULL',",
+				"     format: 'query') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ubicacion_key as integer,",
+				"          municipio as string,",
+				"          establecimiento_salud as string,",
+				"          red_salud as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          municipio,",
+				"          establecimiento_salud",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

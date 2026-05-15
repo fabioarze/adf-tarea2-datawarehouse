@@ -1,0 +1,61 @@
+{
+	"name": "df_gold_dim_vacuna",
+	"properties": {
+		"folder": {
+			"name": "gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "silver_vacunacion_consolidada",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "gold_dim_vacuna",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          nombre_vacuna as string,",
+				"          tipo_vacuna as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT \\n    vacuna_id AS nombre_vacuna, \\n    CASE \\n        WHEN vacuna_id = \\'VAC-001\\' THEN \\'Anti-polio\\'\\n        WHEN vacuna_id = \\'VAC-002\\' THEN \\'Antiamarílica\\'\\n        WHEN vacuna_id = \\'VAC-003\\' THEN \\'Pentavalente\\'\\n        WHEN vacuna_id = \\'VAC-004\\' THEN \\'Santi-Polio\\'\\n        WHEN vacuna_id = \\'VAC-005\\' THEN \\'SR (Sarampión)\\'\\n        ELSE \\'Otra Vacuna\\'\\n    END AS tipo_vacuna\\nFROM silver.vacunacion_consolidada\\nWHERE vacuna_id IS NOT NULL',",
+				"     format: 'query') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          vacuna_key as integer,",
+				"          nombre_vacuna as string,",
+				"          tipo_vacuna as string,",
+				"          es_dosis_unica as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          nombre_vacuna,",
+				"          tipo_vacuna",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
