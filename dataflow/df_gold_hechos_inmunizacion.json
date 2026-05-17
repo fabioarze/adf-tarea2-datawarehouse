@@ -1,0 +1,203 @@
+{
+	"name": "df_gold_hechos_inmunizacion",
+	"properties": {
+		"folder": {
+			"name": "gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "silver_vacunacion_consolidada",
+						"type": "DatasetReference"
+					},
+					"name": "VacunacionConsolidada"
+				},
+				{
+					"dataset": {
+						"referenceName": "gold_dim_vacuna",
+						"type": "DatasetReference"
+					},
+					"name": "DimVacunas"
+				},
+				{
+					"dataset": {
+						"referenceName": "gold_dim_paciente",
+						"type": "DatasetReference"
+					},
+					"name": "DimPaciente"
+				},
+				{
+					"dataset": {
+						"referenceName": "gold_dim_ubicacion",
+						"type": "DatasetReference"
+					},
+					"name": "DimUbicacion"
+				},
+				{
+					"dataset": {
+						"referenceName": "gold_dim_tiempo",
+						"type": "DatasetReference"
+					},
+					"name": "DimTiempo"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "gold_hechos_inmunizacion",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "lookup1"
+				},
+				{
+					"name": "lookup2"
+				},
+				{
+					"name": "lookup3"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "lookup4"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          registro_id as string,",
+				"          paciente_id as string,",
+				"          ci_paciente as string,",
+				"          nombre_completo as string,",
+				"          sexo as string,",
+				"          fecha_nacimiento as date,",
+				"          fecha_vacunacion as timestamp,",
+				"          vacuna_id as string,",
+				"          establecimiento_id as string,",
+				"          numero_dosis as integer,",
+				"          lote_vacuna as string,",
+				"          temperatura_conservacion as decimal(5,2),",
+				"          edad_dias_aplicacion as integer,",
+				"          aplicacion_oportuna as boolean,",
+				"          canal_fuente as string,",
+				"          fecha_carga as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> VacunacionConsolidada",
+				"source(output(",
+				"          vacuna_key as integer,",
+				"          nombre_vacuna as string,",
+				"          tipo_vacuna as string,",
+				"          es_dosis_unica as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimVacunas",
+				"source(output(",
+				"          paciente_key as integer,",
+				"          genero as string,",
+				"          grupo_poblacional as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimPaciente",
+				"source(output(",
+				"          ubicacion_key as integer,",
+				"          municipio as string,",
+				"          establecimiento_salud as string,",
+				"          red_salud as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimUbicacion",
+				"source(output(",
+				"          fecha_key as integer,",
+				"          fecha as date,",
+				"          dia_semana as integer,",
+				"          nombre_dia as string,",
+				"          dia_mes as integer,",
+				"          mes as integer,",
+				"          nombre_mes as string,",
+				"          trimestre as integer,",
+				"          anio as integer,",
+				"          es_fin_semana as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimTiempo",
+				"VacunacionConsolidada, DimVacunas lookup(vacuna_id == nombre_vacuna,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1, DimPaciente lookup(sexo == genero,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup2",
+				"lookup2, DimUbicacion lookup(establecimiento_id == establecimiento_salud,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup3",
+				"lookup3 derive(fecha_vacunacion = toDate(fecha_vacunacion)) ~> derivedColumn1",
+				"derivedColumn1, DimTiempo lookup(fecha_vacunacion == fecha,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup4",
+				"lookup4 select(mapColumn(",
+				"          numero_dosis,",
+				"          edad_dias_aplicacion,",
+				"          vacuna_key,",
+				"          paciente_key,",
+				"          ubicacion_key,",
+				"          fecha_key",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          inmunizacion_key as integer,",
+				"          fecha_key as integer,",
+				"          vacuna_key as integer,",
+				"          ubicacion_key as integer,",
+				"          paciente_key as integer,",
+				"          cantidad_dosis as integer,",
+				"          edad_dias_dato as integer,",
+				"          descripcion_edad as string,",
+				"          condicion_especial as string,",
+				"          sitio_aplicacion as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          fecha_key,",
+				"          vacuna_key,",
+				"          ubicacion_key,",
+				"          paciente_key,",
+				"          cantidad_dosis = numero_dosis,",
+				"          edad_dias_dato = edad_dias_aplicacion",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
